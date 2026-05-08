@@ -88,9 +88,21 @@ The library includes numerous examples demonstrating:
 
 ## Installation
 
-1. Download this repository
-2. Install it into your Arduino libraries folder
-3. Select the appropriate setup configuration for your hardware
+Clone the repository directly into a folder named `Seeed_GFX`:
+
+```bash
+cd <your-arduino-libraries-folder>
+git clone https://github.com/Streetblock/Seeed_TFT_eSPI.git Seeed_GFX
+```
+
+Then restart the Arduino IDE and select the appropriate setup configuration for your hardware.
+
+Quick verification:
+
+```bash
+cd <your-arduino-libraries-folder>/Seeed_GFX
+git remote -v
+```
 
 ## Documentation
 

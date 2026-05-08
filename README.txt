@@ -5,3 +5,8 @@ Arduino IDE compatible boards are also supported but the library
 then uses generic functions which will be slower. The library uses
 32-bit variables extensively so this will affect performance on 8
 and 16-bit processors.
+
+Install with git into a folder named "Seeed_GFX":
+
+  cd <your-arduino-libraries-folder>
+  git clone https://github.com/Streetblock/Seeed_TFT_eSPI.git Seeed_GFX
