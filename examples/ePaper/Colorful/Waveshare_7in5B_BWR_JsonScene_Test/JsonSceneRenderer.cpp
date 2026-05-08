@@ -58,6 +58,32 @@ uint8_t JsonSceneRenderer::parseDatum(const char* datum, uint8_t fallback) const
   return fallback;
 }
 
+void JsonSceneRenderer::drawPixel(JsonObjectConst obj)
+{
+  int x = obj["x"] | 0;
+  int y = obj["y"] | 0;
+  uint16_t color = parseColor(obj["color"], TFT_BLACK);
+  display_.drawPixel(x, y, color);
+}
+
+void JsonSceneRenderer::drawHLine(JsonObjectConst obj)
+{
+  int x = obj["x"] | 0;
+  int y = obj["y"] | 0;
+  int w = obj["w"] | 0;
+  uint16_t color = parseColor(obj["color"], TFT_BLACK);
+  display_.drawFastHLine(x, y, w, color);
+}
+
+void JsonSceneRenderer::drawVLine(JsonObjectConst obj)
+{
+  int x = obj["x"] | 0;
+  int y = obj["y"] | 0;
+  int h = obj["h"] | 0;
+  uint16_t color = parseColor(obj["color"], TFT_BLACK);
+  display_.drawFastVLine(x, y, h, color);
+}
+
 void JsonSceneRenderer::drawRect(JsonObjectConst obj)
 {
   int x = obj["x"] | 0;
@@ -76,6 +102,25 @@ void JsonSceneRenderer::drawRect(JsonObjectConst obj)
   }
 }
 
+void JsonSceneRenderer::drawRoundRect(JsonObjectConst obj)
+{
+  int x = obj["x"] | 0;
+  int y = obj["y"] | 0;
+  int w = obj["w"] | 0;
+  int h = obj["h"] | 0;
+  int r = obj["r"] | 8;
+
+  if (obj["fill"].is<JsonVariantConst>())
+  {
+    display_.fillRoundRect(x, y, w, h, r, parseColor(obj["fill"], TFT_WHITE));
+  }
+
+  if (obj["stroke"].is<JsonVariantConst>())
+  {
+    display_.drawRoundRect(x, y, w, h, r, parseColor(obj["stroke"], TFT_BLACK));
+  }
+}
+
 void JsonSceneRenderer::drawCircle(JsonObjectConst obj)
 {
   int x = obj["x"] | 0;
@@ -90,6 +135,24 @@ void JsonSceneRenderer::drawCircle(JsonObjectConst obj)
   if (obj["stroke"].is<JsonVariantConst>())
   {
     display_.drawCircle(x, y, r, parseColor(obj["stroke"], TFT_BLACK));
+  }
+}
+
+void JsonSceneRenderer::drawEllipse(JsonObjectConst obj)
+{
+  int x = obj["x"] | 0;
+  int y = obj["y"] | 0;
+  int rx = obj["rx"] | 0;
+  int ry = obj["ry"] | 0;
+
+  if (obj["fill"].is<JsonVariantConst>())
+  {
+    display_.fillEllipse(x, y, rx, ry, parseColor(obj["fill"], TFT_WHITE));
+  }
+
+  if (obj["stroke"].is<JsonVariantConst>())
+  {
+    display_.drawEllipse(x, y, rx, ry, parseColor(obj["stroke"], TFT_BLACK));
   }
 }
 
@@ -141,6 +204,39 @@ void JsonSceneRenderer::drawText(JsonObjectConst obj)
   display_.drawString(value, x, y);
 }
 
+void JsonSceneRenderer::drawNumber(JsonObjectConst obj)
+{
+  long value = obj["value"] | 0;
+  int x = obj["x"] | 0;
+  int y = obj["y"] | 0;
+  uint8_t font = obj["font"] | 2;
+  uint8_t size = obj["size"] | 1;
+  uint16_t color = parseColor(obj["color"], TFT_BLACK);
+  uint16_t bg = parseColor(obj["bg"], TFT_WHITE);
+
+  display_.setTextFont(font);
+  display_.setTextSize(size);
+  display_.setTextColor(color, bg);
+  display_.drawNumber(value, x, y, font);
+}
+
+void JsonSceneRenderer::drawChar(JsonObjectConst obj)
+{
+  const char* value = obj["value"] | "";
+  char ch = (value && value[0]) ? value[0] : '?';
+  int x = obj["x"] | 0;
+  int y = obj["y"] | 0;
+  uint8_t font = obj["font"] | 2;
+  uint8_t size = obj["size"] | 1;
+  uint16_t color = parseColor(obj["color"], TFT_BLACK);
+  uint16_t bg = parseColor(obj["bg"], TFT_WHITE);
+
+  display_.setTextFont(font);
+  display_.setTextSize(size);
+  display_.setTextColor(color, bg);
+  display_.drawChar(ch, x, y, font);
+}
+
 bool JsonSceneRenderer::render(const char* json)
 {
 #if !JSON_SCENE_RENDERER_HAS_ARDUINOJSON
@@ -170,11 +266,18 @@ bool JsonSceneRenderer::render(const char* json)
   {
     const char* type = obj["type"] | "";
 
-    if (strcmp(type, "rect") == 0) drawRect(obj);
+    if (strcmp(type, "pixel") == 0) drawPixel(obj);
+    else if (strcmp(type, "hline") == 0) drawHLine(obj);
+    else if (strcmp(type, "vline") == 0) drawVLine(obj);
+    else if (strcmp(type, "rect") == 0) drawRect(obj);
+    else if (strcmp(type, "roundRect") == 0) drawRoundRect(obj);
     else if (strcmp(type, "circle") == 0) drawCircle(obj);
+    else if (strcmp(type, "ellipse") == 0) drawEllipse(obj);
     else if (strcmp(type, "line") == 0) drawLine(obj);
     else if (strcmp(type, "triangle") == 0) drawTriangle(obj);
     else if (strcmp(type, "text") == 0) drawText(obj);
+    else if (strcmp(type, "number") == 0) drawNumber(obj);
+    else if (strcmp(type, "char") == 0) drawChar(obj);
   }
 
   return true;

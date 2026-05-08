@@ -26,8 +26,15 @@ static const char* kSceneJson = R"JSON(
     { "type": "text", "value": "WHITE", "x": 358, "y": 278, "font": 4, "size": 1, "color": "black", "bg": "white", "datum": "TL" },
     { "type": "text", "value": "BLACK", "x": 612, "y": 278, "font": 4, "size": 1, "color": "red", "bg": "black", "datum": "TL" },
 
-    { "type": "line", "x1": 24, "y1": 448, "x2": 776, "y2": 448, "color": "red" },
-    { "type": "text", "value": "Shapes: rect, circle, line, triangle, text", "x": 32, "y": 456, "font": 2, "size": 1, "color": "black", "bg": "white", "datum": "BL" }
+    { "type": "hline", "x": 24, "y": 448, "w": 752, "color": "red" },
+    { "type": "vline", "x": 775, "y": 128, "h": 320, "color": "red" },
+    { "type": "roundRect", "x": 560, "y": 146, "w": 180, "h": 70, "r": 12, "stroke": "white" },
+    { "type": "ellipse", "x": 650, "y": 196, "rx": 46, "ry": 20, "stroke": "white" },
+    { "type": "number", "value": 75, "x": 620, "y": 304, "font": 4, "size": 1, "color": "white", "bg": "black" },
+    { "type": "char", "value": "B", "x": 700, "y": 304, "font": 4, "size": 1, "color": "red", "bg": "black" },
+    { "type": "pixel", "x": 780, "y": 460, "color": "black" },
+    { "type": "line", "x1": 24, "y1": 462, "x2": 776, "y2": 462, "color": "black" },
+    { "type": "text", "value": "Types: pixel,hline,vline,rect,roundRect,circle,ellipse,line,triangle,text,number,char", "x": 32, "y": 456, "font": 1, "size": 1, "color": "black", "bg": "white", "datum": "BL" }
   ]
 }
 )JSON";

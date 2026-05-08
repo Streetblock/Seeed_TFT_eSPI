@@ -26,9 +26,16 @@ private:
 
   uint16_t parseColor(JsonVariantConst value, uint16_t fallback) const;
   uint8_t parseDatum(const char* datum, uint8_t fallback) const;
+  void drawPixel(JsonObjectConst obj);
+  void drawHLine(JsonObjectConst obj);
+  void drawVLine(JsonObjectConst obj);
   void drawRect(JsonObjectConst obj);
+  void drawRoundRect(JsonObjectConst obj);
   void drawCircle(JsonObjectConst obj);
+  void drawEllipse(JsonObjectConst obj);
   void drawLine(JsonObjectConst obj);
   void drawTriangle(JsonObjectConst obj);
   void drawText(JsonObjectConst obj);
+  void drawNumber(JsonObjectConst obj);
+  void drawChar(JsonObjectConst obj);
 };
