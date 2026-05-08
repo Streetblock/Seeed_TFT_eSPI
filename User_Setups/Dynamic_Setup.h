@@ -272,6 +272,10 @@
 #include <User_Setups/Setup301_BW16_ST7735.h>
 #elif BOARD_SCREEN_COMBO == 302
 #include <User_Setups/Setup302_Waveshare_ESP32S3_GC9A01.h>
+#elif BOARD_SCREEN_COMBO == 304
+#define ENABLE_EPAPER_BOARD_PIN_SETUPS
+#define USE_BWRY_EPAPER
+#include <User_Setups/Setup304_Waveshare_XIAO_EPaper_7inch5B_V2.h>
 
 #elif BOARD_SCREEN_COMBO == 500
 #include <User_Setups/Setup500_Seeed_Wio_Terminal.h>
