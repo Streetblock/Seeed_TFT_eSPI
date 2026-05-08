@@ -1,0 +1,2 @@
+#define BOARD_SCREEN_COMBO 304 // Waveshare 7.5 inch B/W/R ePaper (B V2/V3)
+#define USE_XIAO_EPAPER_DISPLAY_BOARD_EE04
