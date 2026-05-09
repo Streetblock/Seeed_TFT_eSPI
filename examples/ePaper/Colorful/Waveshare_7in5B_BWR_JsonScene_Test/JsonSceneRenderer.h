@@ -34,4 +34,5 @@ private:
   void drawText(JsonObjectConst obj);
   void drawNumber(JsonObjectConst obj);
   void drawChar(JsonObjectConst obj);
+  void drawQRCode(JsonObjectConst obj);
 };

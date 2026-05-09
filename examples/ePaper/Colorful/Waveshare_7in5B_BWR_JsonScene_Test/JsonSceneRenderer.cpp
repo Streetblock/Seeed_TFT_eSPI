@@ -1,6 +1,7 @@
 #include "JsonSceneRenderer.h"
 
 #include <string.h>
+#include "qrcode.h" // HINZUGEFÜGT: Arduino QR-Code Bibliothek (von Richard Moore)
 
 JsonSceneRenderer::JsonSceneRenderer(EPaper& display)
     : display_(display), lastError_(nullptr)
@@ -237,6 +238,46 @@ void JsonSceneRenderer::drawChar(JsonObjectConst obj)
   display_.drawChar(ch, x, y, font);
 }
 
+void JsonSceneRenderer::drawQRCode(JsonObjectConst obj)
+{
+  const char* value = obj["value"] | "";
+  if (strlen(value) == 0) return;
+
+  int x = obj["x"] | 0;
+  int y = obj["y"] | 0;
+  int size = obj["size"] | 3; // Skalierung: 3 Pixel pro QR-Modul ist meist gut lesbar
+  uint8_t version = obj["version"] | 3; // QR Version (bestimmt die Datenmenge)
+  uint16_t color = parseColor(obj["color"], TFT_BLACK);
+  uint16_t bg = parseColor(obj["bg"], TFT_WHITE);
+
+  // QR Code Instanz erstellen
+  QRCode qrcode;
+  
+  // Dynamisch den nötigen RAM reservieren (qrcode_getBufferSize ist ein Makro)
+  uint8_t qrcodeData[qrcode_getBufferSize(version)];
+  
+  // Text generieren. Die '0' steht für ECC_LOW (niedrigste Fehlerkorrektur = meiste Daten)
+  qrcode_initText(&qrcode, qrcodeData, version, 0, value);
+
+  // Zuerst eine Hintergrund-Box zeichnen (QR Codes brauchen einen weißen Rand, die "Quiet Zone")
+  // Für das Padding addieren wir 2 "Module" pro Seite
+  int padding = size * 2; 
+  int totalSize = (qrcode.size * size) + (padding * 2);
+  
+  // Hintergrund zeichnen (etwas nach links und oben verschoben für das Padding)
+  display_.fillRect(x - padding, y - padding, totalSize, totalSize, bg);
+
+  // Jetzt die eigentliche Matrix durchgehen und zeichnen
+  for (uint8_t qry = 0; qry < qrcode.size; qry++) {
+    for (uint8_t qrx = 0; qrx < qrcode.size; qrx++) {
+      // getModule gibt true (1) zurück, wenn der Punkt "schwarz" ist
+      if (qrcode_getModule(&qrcode, qrx, qry)) {
+        display_.fillRect(x + (qrx * size), y + (qry * size), size, size, color);
+      }
+    }
+  }
+}
+
 bool JsonSceneRenderer::render(const char* json)
 {
 #if !JSON_SCENE_RENDERER_HAS_ARDUINOJSON
@@ -278,6 +319,7 @@ bool JsonSceneRenderer::render(const char* json)
     else if (strcmp(type, "text") == 0) drawText(obj);
     else if (strcmp(type, "number") == 0) drawNumber(obj);
     else if (strcmp(type, "char") == 0) drawChar(obj);
+    else if (strcmp(type, "qrcode") == 0) drawQRCode(obj);
   }
 
   return true;
