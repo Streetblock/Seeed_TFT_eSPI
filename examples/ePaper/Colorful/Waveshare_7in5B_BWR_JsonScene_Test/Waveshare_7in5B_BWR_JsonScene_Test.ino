@@ -84,7 +84,7 @@ static const char* kSceneJson = R"JSON(
     },
     {
       "type": "qrcode",
-      "value": "https://github.com/olikraus",
+      "value": "https://github.com/streetblock",
       "x": 341,
       "y": 146,
       "size": 4,
