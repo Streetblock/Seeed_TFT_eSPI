@@ -2,12 +2,8 @@
 
 #include "TFT_eSPI.h"
 
-#if __has_include(<ArduinoJson.h>)
 #include <ArduinoJson.h>
 #define JSON_SCENE_RENDERER_HAS_ARDUINOJSON 1
-#else
-#define JSON_SCENE_RENDERER_HAS_ARDUINOJSON 0
-#endif
 
 class JsonSceneRenderer
 {
