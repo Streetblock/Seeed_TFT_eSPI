@@ -1,7 +1,61 @@
 #include "JsonSceneRenderer.h"
 
 #include <string.h>
-#include "qrcode.h" // HINZUGEFÜGT: Arduino QR-Code Bibliothek (von Richard Moore)
+#if defined(ARDUINO_ARCH_ESP32)
+  #include <qrcode.h>
+  #define JSON_SCENE_RENDERER_HAS_ESP32_QRCODE 1
+#else
+  #define JSON_SCENE_RENDERER_HAS_ESP32_QRCODE 0
+#endif
+
+#if JSON_SCENE_RENDERER_HAS_ESP32_QRCODE
+namespace {
+struct QrRenderContext
+{
+  EPaper* display;
+  int x;
+  int y;
+  int moduleSize;
+  uint16_t fg;
+  uint16_t bg;
+};
+
+static QrRenderContext* g_qrContext = nullptr;
+
+static void qrDisplayCallback(esp_qrcode_handle_t qrcode)
+{
+  if (!g_qrContext || !g_qrContext->display) return;
+
+  int qrSize = esp_qrcode_get_size(qrcode);
+  int moduleSize = g_qrContext->moduleSize;
+  int padding = moduleSize * 2; // quiet zone
+  int totalSize = (qrSize * moduleSize) + (padding * 2);
+
+  g_qrContext->display->fillRect(
+      g_qrContext->x - padding,
+      g_qrContext->y - padding,
+      totalSize,
+      totalSize,
+      g_qrContext->bg);
+
+  for (int y = 0; y < qrSize; y++)
+  {
+    for (int x = 0; x < qrSize; x++)
+    {
+      if (esp_qrcode_get_module(qrcode, x, y))
+      {
+        g_qrContext->display->fillRect(
+            g_qrContext->x + (x * moduleSize),
+            g_qrContext->y + (y * moduleSize),
+            moduleSize,
+            moduleSize,
+            g_qrContext->fg);
+      }
+    }
+  }
+}
+} // namespace
+#endif
 
 JsonSceneRenderer::JsonSceneRenderer(EPaper& display)
     : display_(display), lastError_(nullptr)
@@ -240,42 +294,29 @@ void JsonSceneRenderer::drawChar(JsonObjectConst obj)
 
 void JsonSceneRenderer::drawQRCode(JsonObjectConst obj)
 {
+#if !JSON_SCENE_RENDERER_HAS_ESP32_QRCODE
+  (void)obj;
+  return;
+#else
   const char* value = obj["value"] | "";
   if (strlen(value) == 0) return;
 
   int x = obj["x"] | 0;
   int y = obj["y"] | 0;
-  int size = obj["size"] | 3; // Skalierung: 3 Pixel pro QR-Modul ist meist gut lesbar
-  uint8_t version = obj["version"] | 3; // QR Version (bestimmt die Datenmenge)
+  int size = obj["size"] | 3; // pixels per module
+  if (size < 1) size = 1;
   uint16_t color = parseColor(obj["color"], TFT_BLACK);
   uint16_t bg = parseColor(obj["bg"], TFT_WHITE);
 
-  // QR Code Instanz erstellen
-  QRCode qrcode;
-  
-  // Dynamisch den nötigen RAM reservieren (qrcode_getBufferSize ist ein Makro)
-  uint8_t qrcodeData[qrcode_getBufferSize(version)];
-  
-  // Text generieren. Die '0' steht für ECC_LOW (niedrigste Fehlerkorrektur = meiste Daten)
-  qrcode_initText(&qrcode, qrcodeData, version, 0, value);
+  QrRenderContext ctx{&display_, x, y, size, color, bg};
+  g_qrContext = &ctx;
 
-  // Zuerst eine Hintergrund-Box zeichnen (QR Codes brauchen einen weißen Rand, die "Quiet Zone")
-  // Für das Padding addieren wir 2 "Module" pro Seite
-  int padding = size * 2; 
-  int totalSize = (qrcode.size * size) + (padding * 2);
-  
-  // Hintergrund zeichnen (etwas nach links und oben verschoben für das Padding)
-  display_.fillRect(x - padding, y - padding, totalSize, totalSize, bg);
+  esp_qrcode_config_t cfg = ESP_QRCODE_CONFIG_DEFAULT();
+  cfg.display_func = qrDisplayCallback;
+  esp_qrcode_generate(&cfg, value);
 
-  // Jetzt die eigentliche Matrix durchgehen und zeichnen
-  for (uint8_t qry = 0; qry < qrcode.size; qry++) {
-    for (uint8_t qrx = 0; qrx < qrcode.size; qrx++) {
-      // getModule gibt true (1) zurück, wenn der Punkt "schwarz" ist
-      if (qrcode_getModule(&qrcode, qrx, qry)) {
-        display_.fillRect(x + (qrx * size), y + (qry * size), size, size, color);
-      }
-    }
-  }
+  g_qrContext = nullptr;
+#endif
 }
 
 bool JsonSceneRenderer::render(const char* json)
