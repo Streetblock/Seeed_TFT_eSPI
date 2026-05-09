@@ -89,3 +89,7 @@ debug_custom.json
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# Eigene Secrets ignorieren
+secret.h
+secrets.h

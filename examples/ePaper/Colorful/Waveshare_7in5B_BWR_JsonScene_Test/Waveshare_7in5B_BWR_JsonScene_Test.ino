@@ -7,17 +7,14 @@
 #include "TFT_eSPI.h"
 #include "JsonSceneRenderer.h"
 
+// --- Hier laden wir die geheimen Daten rein! ---
+#include "secrets.h"
+
 #ifdef EPAPER_ENABLE
 EPaper epaper;
 JsonSceneRenderer renderer(epaper);
 #endif
 
-// WLAN-Zugangsdaten
-const char* ssid = "WLAN_SSID";
-const char* password = "*";
-
-// HIER DEINE URL EINTRAGEN: Wo liegt die JSON-Datei?
-const char* json_url = "https://www.deine-domain.de/layout.json";
 
 void setup() {
     Serial.begin(115200);
