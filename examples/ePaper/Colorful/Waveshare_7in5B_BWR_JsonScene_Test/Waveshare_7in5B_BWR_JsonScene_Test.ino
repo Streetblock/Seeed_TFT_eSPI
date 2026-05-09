@@ -1,3 +1,8 @@
+#include <WiFi.h>
+#include <WiFiClientSecure.h>
+#include <HTTPClient.h>
+
+// Deine Display-Bibliotheken
 #include "driver.h"
 #include "TFT_eSPI.h"
 #include "JsonSceneRenderer.h"
@@ -7,225 +12,123 @@ EPaper epaper;
 JsonSceneRenderer renderer(epaper);
 #endif
 
-static const char* kSceneJson = R"JSON(
-{
-  "clear": "white",
-  "objects": [
-    {
-      "type": "rect",
-      "x": 0,
-      "y": 0,
-      "w": 800,
-      "h": 480,
-      "stroke": "black"
-    },
-    {
-      "type": "rect",
-      "x": 4,
-      "y": 4,
-      "w": 792,
-      "h": 472,
-      "stroke": "red"
-    },
-    {
-      "type": "rect",
-      "x": 16,
-      "y": 16,
-      "w": 768,
-      "h": 88,
-      "fill": "black"
-    },
-    {
-      "type": "text",
-      "value": "Waveshare 7.5in BWR",
-      "x": 32,
-      "y": 34,
-      "font": 4,
-      "size": 1,
-      "color": "red",
-      "bg": "black",
-      "datum": "TL"
-    },
-    {
-      "type": "text",
-      "value": "JSON runtime scene renderer",
-      "x": 32,
-      "y": 74,
-      "font": 2,
-      "size": 1,
-      "color": "white",
-      "bg": "black",
-      "datum": "TL"
-    },
-    {
-      "type": "rect",
-      "x": 24,
-      "y": 128,
-      "w": 250,
-      "h": 320,
-      "fill": "red"
-    },
-    {
-      "type": "rect",
-      "x": 274,
-      "y": 128,
-      "w": 250,
-      "h": 320,
-      "fill": "white",
-      "stroke": "black"
-    },
-    {
-      "type": "rect",
-      "x": 524,
-      "y": 128,
-      "w": 252,
-      "h": 320,
-      "fill": "black"
-    },
-    {
-      "type": "qrcode",
-      "value": "https://github.com/streetblock",
-      "x": 341,
-      "y": 146,
-      "size": 4,
-      "version": 3,
-      "color": "black",
-      "bg": "white"
-    },
-    {
-      "type": "text",
-      "value": "RED",
-      "x": 120,
-      "y": 278,
-      "font": 4,
-      "size": 1,
-      "color": "white",
-      "bg": "red",
-      "datum": "TL"
-    },
-    {
-      "type": "text",
-      "value": "WHITE",
-      "x": 358,
-      "y": 278,
-      "font": 4,
-      "size": 1,
-      "color": "black",
-      "bg": "white",
-      "datum": "TL"
-    },
-    {
-      "type": "text",
-      "value": "BLACK",
-      "x": 612,
-      "y": 278,
-      "font": 4,
-      "size": 1,
-      "color": "red",
-      "bg": "black",
-      "datum": "TL"
-    },
-    {
-      "type": "hline",
-      "x": 24,
-      "y": 448,
-      "w": 752,
-      "color": "red"
-    },
-    {
-      "type": "vline",
-      "x": 775,
-      "y": 128,
-      "h": 320,
-      "color": "red"
-    },
-    {
-      "type": "roundRect",
-      "x": 560,
-      "y": 146,
-      "w": 180,
-      "h": 70,
-      "r": 12,
-      "stroke": "white"
-    },
-    {
-      "type": "ellipse",
-      "x": 650,
-      "y": 196,
-      "rx": 46,
-      "ry": 20,
-      "stroke": "white"
-    },
-    {
-      "type": "number",
-      "value": 75,
-      "x": 620,
-      "y": 304,
-      "font": 4,
-      "size": 1,
-      "color": "white",
-      "bg": "black"
-    },
-    {
-      "type": "char",
-      "value": "B",
-      "x": 700,
-      "y": 304,
-      "font": 4,
-      "size": 1,
-      "color": "red",
-      "bg": "black"
-    },
-    {
-      "type": "pixel",
-      "x": 780,
-      "y": 460,
-      "color": "black"
-    },
-    {
-      "type": "line",
-      "x1": 24,
-      "y1": 462,
-      "x2": 776,
-      "y2": 462,
-      "color": "black"
-    },
-    {
-      "type": "text",
-      "value": "Types: pixel,hline,vline,rect,roundRect,circle,ellipse,line,triangle,text,number,char,qrcode",
-      "x": 32,
-      "y": 456,
-      "font": 1,
-      "size": 1,
-      "color": "black",
-      "bg": "white",
-      "datum": "BL"
-    }
-  ]
-}
-)JSON";
+// WLAN-Zugangsdaten
+const char* ssid = "WLAN_SSID";
+const char* password = "*";
 
-void setup()
-{
+// HIER DEINE URL EINTRAGEN: Wo liegt die JSON-Datei?
+const char* json_url = "https://www.deine-domain.de/layout.json";
+
+void setup() {
+    Serial.begin(115200);
+
 #ifdef EPAPER_ENABLE
-  epaper.begin();
-  epaper.setRotation(0);
-
-  if (!renderer.render(kSceneJson))
-  {
+    epaper.begin();
+    epaper.setRotation(0);
     epaper.fillScreen(TFT_WHITE);
-    epaper.setTextColor(TFT_RED, TFT_WHITE);
-    epaper.setTextFont(2);
-    epaper.setTextDatum(TL_DATUM);
-    epaper.drawString("JSON render error:", 16, 16);
     epaper.setTextColor(TFT_BLACK, TFT_WHITE);
-    epaper.drawString(renderer.lastError() ? renderer.lastError() : "unknown", 16, 40);
-  }
-
-  epaper.update();
+    epaper.setTextFont(2);
+    epaper.drawString("Verbinde mit WLAN...", 16, 16);
+    epaper.update();
 #endif
+
+    // 1. WLAN verbinden
+    Serial.println("\nInitialisiere WLAN...");
+    WiFi.mode(WIFI_STA);
+    WiFi.disconnect();
+    delay(100);
+
+    WiFi.begin(ssid, password);
+    Serial.print("Verbinde mit WLAN");
+    
+    int attempts = 0;
+    while (WiFi.status() != WL_CONNECTED && attempts < 20) {
+        delay(500);
+        Serial.print(".");
+        attempts++;
+    }
+
+    if (WiFi.status() == WL_CONNECTED) {
+        Serial.println("\nVerbunden!");
+        
+        // Status auf Display updaten
+#ifdef EPAPER_ENABLE
+        epaper.fillScreen(TFT_WHITE);
+        epaper.drawString("Lade JSON Layout...", 16, 16);
+        epaper.update();
+#endif
+
+        // 2. JSON Layout herunterladen und rendern
+        fetchAndRenderLayout();
+        
+    } else {
+        Serial.println("\nFehler: WLAN-Verbindung fehlgeschlagen!");
+#ifdef EPAPER_ENABLE
+        epaper.fillScreen(TFT_WHITE);
+        epaper.setTextColor(TFT_RED, TFT_WHITE);
+        epaper.drawString("WLAN Fehler!", 16, 16);
+        epaper.update();
+#endif
+        delay(5000);
+        ESP.restart();
+    }
 }
 
-void loop()
-{
+void loop() {
+    // Hier kannst du später einen Timer einbauen, 
+    // falls sich das Layout alle X Minuten aktualisieren soll.
+}
+
+void fetchAndRenderLayout() {
+    Serial.println("Lade JSON von URL...");
+    
+    WiFiClientSecure client;
+    client.setInsecure(); // Zertifikatsprüfung überspringen
+    client.setHandshakeTimeout(20000); // WICHTIG FÜR ESP32-S3: Zeit für den Handshake geben
+
+    HTTPClient http;
+    http.begin(client, json_url);
+    http.setTimeout(15000); // Zeit für den eigentlichen Download
+
+    int httpResponseCode = http.GET();
+    String payload = "";
+
+    if (httpResponseCode > 0) {
+        Serial.printf("HTTP Statuscode: %d\n", httpResponseCode);
+        payload = http.getString(); // Das JSON als Text speichern
+        Serial.println("Download erfolgreich.");
+    } else {
+        Serial.printf("HTTP Fehlercode: %d\n", httpResponseCode);
+    }
+    
+    http.end(); // Verbindung schließen
+
+    // 3. Wenn wir Text bekommen haben, schicken wir ihn an den Renderer
+    if (payload.length() > 0) {
+        Serial.println("Rendere Scene...");
+        
+#ifdef EPAPER_ENABLE
+        // payload.c_str() wandelt den String in das Format um, das der Renderer erwartet
+        if (!renderer.render(payload.c_str())) {
+            // Falls das JSON fehlerhaft formatiert ist (z.B. Komma vergessen)
+            epaper.fillScreen(TFT_WHITE);
+            epaper.setTextColor(TFT_RED, TFT_WHITE);
+            epaper.setTextFont(2);
+            epaper.drawString("JSON Render Error:", 16, 16);
+            epaper.setTextColor(TFT_BLACK, TFT_WHITE);
+            epaper.drawString(renderer.lastError() ? renderer.lastError() : "unknown", 16, 40);
+        }
+        
+        epaper.update();
+        Serial.println("Display aktualisiert!");
+#endif
+    } else {
+        // Falls kein Payload kam (z.B. wegen SSL Fehler -1)
+#ifdef EPAPER_ENABLE
+        epaper.fillScreen(TFT_WHITE);
+        epaper.setTextColor(TFT_RED, TFT_WHITE);
+        epaper.drawString("Download fehlgeschlagen!", 16, 16);
+        epaper.update();
+#endif
+    }
 }
