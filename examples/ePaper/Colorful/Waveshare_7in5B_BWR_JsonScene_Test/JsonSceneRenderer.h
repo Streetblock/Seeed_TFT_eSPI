@@ -24,7 +24,6 @@ private:
   EPaper& display_;
   const char* lastError_;
 
-#if JSON_SCENE_RENDERER_HAS_ARDUINOJSON
   uint16_t parseColor(JsonVariantConst value, uint16_t fallback) const;
   uint8_t parseDatum(const char* datum, uint8_t fallback) const;
   void drawPixel(JsonObjectConst obj);
@@ -39,5 +38,4 @@ private:
   void drawText(JsonObjectConst obj);
   void drawNumber(JsonObjectConst obj);
   void drawChar(JsonObjectConst obj);
-#endif
 };
