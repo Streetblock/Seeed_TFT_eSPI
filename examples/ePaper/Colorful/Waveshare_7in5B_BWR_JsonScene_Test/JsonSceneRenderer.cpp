@@ -12,6 +12,7 @@ const char* JsonSceneRenderer::lastError() const
   return lastError_;
 }
 
+#if JSON_SCENE_RENDERER_HAS_ARDUINOJSON
 uint16_t JsonSceneRenderer::parseColor(JsonVariantConst value, uint16_t fallback) const
 {
   if (value.is<uint32_t>())
@@ -236,6 +237,7 @@ void JsonSceneRenderer::drawChar(JsonObjectConst obj)
   display_.setTextColor(color, bg);
   display_.drawChar(ch, x, y, font);
 }
+#endif
 
 bool JsonSceneRenderer::render(const char* json)
 {
